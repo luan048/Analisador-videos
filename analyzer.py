@@ -24,19 +24,25 @@ def downloadVideo(video_url) :
 #Converte audio em text
 def transcribeAudio(audio_path) :
     with open(audio_path, "rb") as audio_file:
-        transcription = openai.Audio.transcribe(
+        transcription = openai.audio.transcriptions.create(
             model="whisper-1",
             file=audio_file
-        )
+        ).text
 
     return transcription['text']
 
-def summarizeText(text):
-    response = openai.Completion.create(
-        engine="text-davinci-003",
-        prompt=f"Resuma  o seguinte text:\n\n{text}",
-        max_tokens=150
-    )
+def summarizeText(transcription):
+    response = openai.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system",
+             "content": """
+                Você é um assistente que resume videos, responda tudo com formatação Markdown.
+            """},
+
+            {"role": "user",
+             "content": f"Descreva o seguinte video: {transcription}"}
+        ])
     return response['choices'][0]['text'].strip()
 
 def analyze_video(video_url):
